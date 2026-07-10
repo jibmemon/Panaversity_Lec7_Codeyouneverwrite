@@ -1,4 +1,4 @@
-# Project 2 — What's My Grade, Really
+# Project 2 — What's My Grade, 
 
 ## The Problem
 Generic "grade calculator" apps don't know a specific teacher's actual rules —
