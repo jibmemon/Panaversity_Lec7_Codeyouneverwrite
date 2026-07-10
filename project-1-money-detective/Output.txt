@@ -1,0 +1,19 @@
+🚩 10 exact duplicate charges found — same date, same description, same amount, charged twice. This is the strongest signal of a real billing mistake (not just "I bought groceries twice this month," but "the exact same payment happened on the exact same day"):
+
+Apartment rent charged twice on 2025-02-26 (60,289 PKR)
+Vehicle tax charged twice on 2025-03-09
+Weekly allowance charged twice on 2025-07-10
+Diesel refill charged twice on 2025-08-15
+Supermarket shopping charged twice on 2025-10-11
+School annual charges charged twice on 2026-03-10
+Fast food charged twice on 2026-03-27
+School accessories charged twice on 2026-08-17
+Restaurant lunch charged twice on 2026-08-18
+Bus fare charged twice on 2026-09-16
+
+→ Potential duplicate-charge waste: 153,414 PKR (if these were genuinely accidental double-charges, not two separate legitimate purchases that just happen to match).
+🔁 Recurring/subscription-like charges — things repeating across 3+ different months, e.g.:
+
+Fiber Subscription (Internet & Mobile) — 3 months, ~5,227 PKR avg
+Internet Bill — 3 months, ~4,984 PKR avg
+Apartment rent, diesel, groceries, school exam fees, etc. (expected recurring costs — good to confirm they're all intentional)
