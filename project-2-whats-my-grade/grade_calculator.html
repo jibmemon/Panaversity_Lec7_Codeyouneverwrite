@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Gradebook — Current Grade Calculator</title>
+<style>
+  :root{
+    --board: #1F3A2E;
+    --board-dark: #16281F;
+    --chalk: #F2EFE6;
+    --chalk-dim: #C9C2AF;
+    --pencil: #E8B839;
+    --red-pen: #C0392B;
+    --line: rgba(242,239,230,0.16);
+    --font-display: 'Georgia', 'Iowan Old Style', serif;
+    --font-mono: 'Courier New', Courier, monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  body{
+    margin:0;
+    background:
+      linear-gradient(var(--line) 1px, transparent 1px) 0 0/100% 34px,
+      var(--board);
+    color: var(--chalk);
+    font-family: var(--font-mono);
+    padding: 40px 20px 80px;
+    min-height:100vh;
+  }
+
+  .wrap{ max-width: 720px; margin: 0 auto; }
+
+  header{ margin-bottom: 28px; text-align:center; }
+  header .eyebrow{
+    font-family: var(--font-mono);
+    letter-spacing: .25em;
+    text-transform: uppercase;
+    font-size: 11px;
+    color: var(--pencil);
+    margin-bottom: 10px;
+  }
+  header h1{
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 34px;
+    margin: 0;
+    color: var(--chalk);
+    border-bottom: 2px dashed var(--line);
+    display:inline-block;
+    padding-bottom: 8px;
+  }
+
+  .policy{
+    font-size: 12.5px;
+    color: var(--chalk-dim);
+    text-align:center;
+    margin: 14px 0 34px;
+    line-height:1.6;
+  }
+  .policy b{ color: var(--chalk); }
+
+  .category{
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+  }
+  .cat-head{
+    display:flex; justify-content:space-between; align-items:baseline;
+    margin-bottom: 12px;
+  }
+  .cat-head .name{
+    font-family: var(--font-display);
+    font-size: 19px;
+    color: var(--pencil);
+  }
+  .cat-head .weight{
+    font-size: 12px;
+    color: var(--chalk-dim);
+  }
+
+  label{ font-size: 12px; color: var(--chalk-dim); display:block; margin-bottom:4px; }
+
+  input[type=number]{
+    background: var(--board-dark);
+    border: 1px solid var(--line);
+    color: var(--chalk);
+    font-family: var(--font-mono);
+    font-size: 15px;
+    padding: 7px 9px;
+    border-radius: 3px;
+    width: 90px;
+  }
+  input[type=number]:focus{
+    outline: none;
+    border-color: var(--pencil);
+  }
+
+  .quiz-rows{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom: 10px; }
+  .quiz-row{ display:flex; align-items:center; gap:6px; }
+  .quiz-row button{
+    background:none; border:none; color: var(--red-pen);
+    cursor:pointer; font-size:15px; font-family: var(--font-mono);
+    line-height:1;
+  }
+  .quiz-row button:hover{ text-decoration: underline; }
+
+  .add-quiz{
+    background:none;
+    border: 1px dashed var(--chalk-dim);
+    color: var(--chalk-dim);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 6px 10px;
+    border-radius: 3px;
+    cursor:pointer;
+  }
+  .add-quiz:hover{ border-color: var(--pencil); color: var(--pencil); }
+
+  .math{
+    margin-top: 12px;
+    font-size: 13px;
+    color: var(--chalk-dim);
+    border-top: 1px solid var(--line);
+    padding-top: 10px;
+    line-height: 1.7;
+  }
+  .math .line{ display:flex; justify-content:space-between; gap: 10px; flex-wrap: wrap;}
+  .math .result{ color: var(--chalk); }
+  .math .dropped{ color: var(--red-pen); text-decoration: line-through; }
+  .note{ font-size: 11.5px; color: var(--red-pen); margin-top: 6px; }
+
+  .total{
+    margin-top: 30px;
+    text-align:center;
+    position: relative;
+  }
+  .total .label{
+    font-size: 12px; letter-spacing:.2em; text-transform:uppercase;
+    color: var(--chalk-dim); margin-bottom: 6px;
+  }
+  .stamp{
+    display:inline-block;
+    font-family: var(--font-display);
+    font-size: 56px;
+    color: var(--red-pen);
+    border: 4px solid var(--red-pen);
+    border-radius: 50%;
+    padding: 18px 30px;
+    transform: rotate(-6deg);
+    position:relative;
+  }
+  .stamp .letter{
+    position:absolute;
+    top: -14px; right: -18px;
+    font-size: 20px;
+    background: var(--board);
+    padding: 2px 8px;
+    border: 2px solid var(--red-pen);
+    border-radius: 50%;
+    transform: rotate(8deg);
+  }
+  .breakdown{
+    margin-top: 22px;
+    font-size: 12.5px;
+    color: var(--chalk-dim);
+    text-align:left;
+    max-width: 340px;
+    margin-left:auto; margin-right:auto;
+    line-height:1.8;
+  }
+  .breakdown .line{ display:flex; justify-content:space-between; }
+  .breakdown .sum{
+    border-top: 1px dashed var(--line);
+    margin-top: 6px; padding-top: 6px;
+    color: var(--chalk); font-weight:bold;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Current Standing</div>
+    <h1>Gradebook</h1>
+  </header>
+
+  <div class="policy">
+    <b>Homework</b> 20% &nbsp;·&nbsp;
+    <b>Quizzes</b> 20% (lowest 2 dropped) &nbsp;·&nbsp;
+    <b>Midterm</b> 25% &nbsp;·&nbsp;
+    <b>Final</b> 35%
+  </div>
+
+  <!-- Homework -->
+  <div class="category">
+    <div class="cat-head">
+      <span class="name">Homework</span>
+      <span class="weight">weight 20%</span>
+    </div>
+    <label for="hw">Score (%)</label>
+    <input type="number" id="hw" value="20" min="0" max="100">
+    <div class="math" id="hw-math"></div>
+  </div>
+
+  <!-- Quizzes -->
+  <div class="category">
+    <div class="cat-head">
+      <span class="name">Quizzes</span>
+      <span class="weight">weight 20% · lowest 2 dropped</span>
+    </div>
+    <div class="quiz-rows" id="quiz-rows"></div>
+    <button class="add-quiz" id="add-quiz" type="button">+ add quiz score</button>
+    <div class="math" id="quiz-math"></div>
+  </div>
+
+  <!-- Midterm -->
+  <div class="category">
+    <div class="cat-head">
+      <span class="name">Midterm</span>
+      <span class="weight">weight 25%</span>
+    </div>
+    <label for="mid">Score (%)</label>
+    <input type="number" id="mid" value="30" min="0" max="100">
+    <div class="math" id="mid-math"></div>
+  </div>
+
+  <!-- Final -->
+  <div class="category">
+    <div class="cat-head">
+      <span class="name">Final</span>
+      <span class="weight">weight 35%</span>
+    </div>
+    <label for="final">Score (%)</label>
+    <input type="number" id="final" value="30" min="0" max="100">
+    <div class="math" id="final-math"></div>
+  </div>
+
+  <div class="total">
+    <div class="label">Overall Grade</div>
+    <div class="stamp">
+      <span id="overall">--</span>%
+      <span class="letter" id="letter">–</span>
+    </div>
+    <div class="breakdown" id="breakdown"></div>
+  </div>
+</div>
+
+<script>
+const hwInput = document.getElementById('hw');
+const midInput = document.getElementById('mid');
+const finalInput = document.getElementById('final');
+const quizRows = document.getElementById('quiz-rows');
+const addQuizBtn = document.getElementById('add-quiz');
+
+let quizScores = [20]; // default matches user's given single quiz score
+
+function renderQuizRows(){
+  quizRows.innerHTML = '';
+  quizScores.forEach((val, i) => {
+    const row = document.createElement('div');
+    row.className = 'quiz-row';
+    row.innerHTML = `
+      <input type="number" min="0" max="100" value="${val}" data-idx="${i}" class="quiz-input">
+      <button type="button" data-idx="${i}" class="remove-quiz" ${quizScores.length <= 1 ? 'disabled style="opacity:.3;cursor:default;"' : ''}>✕</button>
+    `;
+    quizRows.appendChild(row);
+  });
+  document.querySelectorAll('.quiz-input').forEach(inp => {
+    inp.addEventListener('input', e => {
+      quizScores[+e.target.dataset.idx] = clamp(e.target.value);
+      calculate();
+    });
+  });
+  document.querySelectorAll('.remove-quiz').forEach(btn => {
+    btn.addEventListener('click', e => {
+      const idx = +e.target.dataset.idx;
+      if (quizScores.length > 1){
+        quizScores.splice(idx, 1);
+        renderQuizRows();
+        calculate();
+      }
+    });
+  });
+}
+
+addQuizBtn.addEventListener('click', () => {
+  quizScores.push(0);
+  renderQuizRows();
+  calculate();
+});
+
+function clamp(v){
+  v = parseFloat(v);
+  if (isNaN(v)) return 0;
+  return Math.max(0, Math.min(100, v));
+}
+
+function letterFor(pct){
+  if (pct >= 93) return 'A';
+  if (pct >= 90) return 'A-';
+  if (pct >= 87) return 'B+';
+  if (pct >= 83) return 'B';
+  if (pct >= 80) return 'B-';
+  if (pct >= 77) return 'C+';
+  if (pct >= 73) return 'C';
+  if (pct >= 70) return 'C-';
+  if (pct >= 67) return 'D+';
+  if (pct >= 60) return 'D';
+  return 'F';
+}
+
+function calculate(){
+  const hw = clamp(hwInput.value);
+  const mid = clamp(midInput.value);
+  const fin = clamp(finalInput.value);
+
+  // Homework
+  const hwContribution = hw * 0.20;
+  document.getElementById('hw-math').innerHTML = `
+    <div class="line"><span>${hw} × 20%</span><span class="result">= ${hwContribution.toFixed(2)} pts</span></div>
+  `;
+
+  // Quizzes
+  const sorted = quizScores.map((v,i) => ({v: clamp(v), i})).sort((a,b) => a.v - b.v);
+  let dropped = [];
+  let kept = sorted;
+  let quizAvg;
+  let note = '';
+
+  if (quizScores.length > 2){
+    dropped = sorted.slice(0, 2);
+    kept = sorted.slice(2);
+    quizAvg = kept.reduce((s,x) => s + x.v, 0) / kept.length;
+  } else {
+    quizAvg = sorted.reduce((s,x) => s + x.v, 0) / (sorted.length || 1);
+    note = `Only ${quizScores.length} quiz score(s) entered — need at least 3 to drop the lowest 2. Using the average of all entered scores for now.`;
+  }
+
+  const quizContribution = quizAvg * 0.20;
+
+  const allScoresStr = sorted.map(x => {
+    const isDropped = dropped.some(d => d.i === x.i);
+    return `<span class="${isDropped ? 'dropped' : ''}">${x.v}</span>`;
+  }).join(', ');
+
+  document.getElementById('quiz-math').innerHTML = `
+    <div class="line"><span>Scores (sorted): ${allScoresStr}</span></div>
+    <div class="line"><span>Kept average: (${kept.map(x=>x.v).join(' + ') || 0}) / ${kept.length || 1}</span><span class="result">= ${quizAvg.toFixed(2)}</span></div>
+    <div class="line"><span>${quizAvg.toFixed(2)} × 20%</span><span class="result">= ${quizContribution.toFixed(2)} pts</span></div>
+    ${note ? `<div class="note">${note}</div>` : ''}
+  `;
+
+  // Midterm
+  const midContribution = mid * 0.25;
+  document.getElementById('mid-math').innerHTML = `
+    <div class="line"><span>${mid} × 25%</span><span class="result">= ${midContribution.toFixed(2)} pts</span></div>
+  `;
+
+  // Final
+  const finalContribution = fin * 0.35;
+  document.getElementById('final-math').innerHTML = `
+    <div class="line"><span>${fin} × 35%</span><span class="result">= ${finalContribution.toFixed(2)} pts</span></div>
+  `;
+
+  const overall = hwContribution + quizContribution + midContribution + finalContribution;
+
+  document.getElementById('overall').textContent = overall.toFixed(2);
+  document.getElementById('letter').textContent = letterFor(overall);
+
+  document.getElementById('breakdown').innerHTML = `
+    <div class="line"><span>Homework</span><span>${hwContribution.toFixed(2)}</span></div>
+    <div class="line"><span>Quizzes</span><span>${quizContribution.toFixed(2)}</span></div>
+    <div class="line"><span>Midterm</span><span>${midContribution.toFixed(2)}</span></div>
+    <div class="line"><span>Final</span><span>${finalContribution.toFixed(2)}</span></div>
+    <div class="line sum"><span>Total</span><span>${overall.toFixed(2)}%</span></div>
+  `;
+}
+
+[hwInput, midInput, finalInput].forEach(inp => inp.addEventListener('input', calculate));
+
+renderQuizRows();
+calculate();
+</script>
+</body>
+</html>
