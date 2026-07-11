@@ -1,6 +1,6 @@
 # Code You Never Write — Final Report
 
-**Name:** Syed Abdullah Ali
+**Name:** Jibran Ahmed Memon
 **AI Tool(s) Used:** Claude (Anthropic)
 
 ---
