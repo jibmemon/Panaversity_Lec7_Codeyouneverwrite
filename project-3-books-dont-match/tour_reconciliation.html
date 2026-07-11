@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Tour Ledger — Payment Reconciliation</title>
+<style>
+  :root{
+    --navy: #0B1E33;
+    --navy-deep: #071527;
+    --gold: #C9A227;
+    --coral: #D8483B;
+    --teal: #3C8C8A;
+    --paper: #E9E4D6;
+    --ink-dim: rgba(233,228,214,0.55);
+    --line: rgba(233,228,214,0.18);
+    --font-display: Georgia, 'Iowan Old Style', serif;
+    --font-body: Helvetica, Arial, sans-serif;
+    --font-mono: 'Courier New', Courier, monospace;
+  }
+  *{ box-sizing: border-box; }
+  body{
+    margin:0;
+    background: var(--navy);
+    color: var(--paper);
+    font-family: var(--font-body);
+    padding: 36px 18px 80px;
+  }
+  .wrap{ max-width: 900px; margin:0 auto; }
+
+  header{ text-align:center; margin-bottom: 30px; }
+  header .eyebrow{
+    font-family: var(--font-mono);
+    letter-spacing: .3em; text-transform:uppercase;
+    font-size: 11px; color: var(--gold); margin-bottom: 10px;
+  }
+  header h1{
+    font-family: var(--font-display); font-weight:400;
+    font-size: 32px; margin:0; color: var(--paper);
+  }
+  header .sub{ font-size: 13px; color: var(--ink-dim); margin-top: 8px; }
+
+  .panel{
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 20px 22px;
+    margin-bottom: 18px;
+  }
+  .panel h2{
+    font-family: var(--font-display); font-weight:400; font-size:18px;
+    color: var(--gold); margin: 0 0 12px;
+  }
+  .two-col{ display:grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  @media (max-width: 680px){ .two-col{ grid-template-columns: 1fr; } }
+
+  label{ display:block; font-size:12px; color: var(--ink-dim); margin-bottom:6px; }
+  textarea{
+    width:100%; min-height: 160px;
+    background: var(--navy-deep); color: var(--paper);
+    border: 1px solid var(--line); border-radius:4px;
+    font-family: var(--font-mono); font-size: 13px;
+    padding: 10px; resize: vertical;
+  }
+  input[type=file]{
+    font-family: var(--font-body); font-size: 13px; color: var(--ink-dim);
+    margin-bottom: 6px;
+  }
+  input[type=number]{
+    background: var(--navy-deep); border:1px solid var(--line); color:var(--paper);
+    font-family: var(--font-mono); font-size:14px; padding:6px 8px; border-radius:4px; width: 110px;
+  }
+
+  button.primary{
+    background: var(--gold); color: var(--navy-deep);
+    border: none; font-family: var(--font-body); font-weight:bold;
+    font-size: 14px; padding: 11px 22px; border-radius: 4px;
+    cursor:pointer; margin-top: 10px;
+  }
+  button.primary:hover{ filter: brightness(1.08); }
+
+  /* Summary strip */
+  .summary{ display:grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 18px; }
+  @media (max-width: 680px){ .summary{ grid-template-columns: repeat(2,1fr); } }
+  .stat{
+    border: 1px dashed var(--line); border-radius: 6px;
+    padding: 14px 10px; text-align:center;
+  }
+  .stat .n{ font-family: var(--font-mono); font-size: 22px; color: var(--paper); }
+  .stat .l{ font-size: 10.5px; color: var(--ink-dim); text-transform:uppercase; letter-spacing:.08em; margin-top:4px; }
+  .stat.shortfall .n{ color: var(--coral); }
+  .stat.collected .n{ color: var(--teal); }
+
+  /* Ticket-stub member cards */
+  .members{ display:flex; flex-direction:column; gap: 10px; }
+  .stub{
+    position:relative;
+    display:grid; grid-template-columns: 1.4fr 1fr 1fr 1fr;
+    align-items:center; gap: 8px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--line); border-radius: 4px;
+    padding: 12px 16px;
+    font-size: 13px;
+  }
+  @media (max-width: 680px){ .stub{ grid-template-columns: 1fr 1fr; } }
+  .stub::before, .stub::after{
+    content:''; position:absolute; top:50%; transform:translateY(-50%);
+    width: 14px; height:14px; background: var(--navy); border-radius:50%;
+  }
+  .stub::before{ left: -7px; }
+  .stub::after{ right: -7px; }
+  .stub .name{ font-family: var(--font-display); font-size:15px; }
+  .stub .amt{ font-family: var(--font-mono); }
+  .tag{
+    display:inline-block; font-size: 10.5px; padding: 3px 9px;
+    border-radius: 10px; font-family: var(--font-mono); letter-spacing:.03em;
+  }
+  .tag.settled{ background: rgba(60,140,138,0.2); color: var(--teal); border:1px solid var(--teal); }
+  .tag.over{ background: rgba(201,162,39,0.18); color: var(--gold); border:1px solid var(--gold); }
+  .tag.pending{ background: rgba(216,72,59,0.12); color: var(--coral); border:1px solid var(--coral); }
+  .tag.notpaid{ background: rgba(216,72,59,0.25); color: #fff; border:1px solid var(--coral); }
+
+  table{ width:100%; border-collapse: collapse; font-size: 13px; }
+  th, td{ text-align:left; padding: 9px 8px; border-bottom: 1px solid var(--line); }
+  th{ color: var(--ink-dim); font-weight:normal; font-size: 11px; text-transform:uppercase; letter-spacing:.05em; }
+  td.mono, th.mono{ font-family: var(--font-mono); }
+  .flag-reason{ color: var(--coral); font-size: 12px; }
+
+  .empty-note{ color: var(--ink-dim); font-size:13px; font-style:italic; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Tour Ledger</div>
+    <h1>Payment Reconciliation</h1>
+    <div class="sub">Match what came in against who was supposed to pay — and catch what doesn't add up.</div>
+  </header>
+
+  <div class="panel">
+    <h2>1 · Set up</h2>
+    <div class="two-col">
+      <div>
+        <label for="roster">Member roster (one name per line — this is who owes money)</label>
+        <textarea id="roster">Ahmed Raza
+Bilal Sheikh
+Sara Khan
+Fatima Noor
+Usman Tariq
+Ayesha Malik
+Hassan Iqbal
+Zainab Aslam
+Kamran Yousuf
+Nida Farooq
+Omar Siddiqui
+Mehwish Baig
+Tariq Jameel
+Rabia Sultana
+Junaid Akhtar</textarea>
+      </div>
+      <div>
+        <label for="fee">Required amount per member (Rs.)</label>
+        <input type="number" id="fee" value="55000">
+        <label style="margin-top:16px;" for="fileInput">Upload payments .txt</label>
+        <input type="file" id="fileInput" accept=".txt">
+        <label style="margin-top:10px;" for="paymentsBox">...or paste/edit the payment lines directly</label>
+        <textarea id="paymentsBox" placeholder="Date, Name, Amount, TxnID"></textarea>
+      </div>
+    </div>
+    <button class="primary" id="reconcileBtn">Reconcile payments</button>
+  </div>
+
+  <div id="results" style="display:none;">
+    <div class="summary" id="summaryStats"></div>
+
+    <div class="panel">
+      <h2>2 · Member-by-member status</h2>
+      <div class="members" id="memberList"></div>
+    </div>
+
+    <div class="panel">
+      <h2>3 · Flagged for review (excluded from totals above)</h2>
+      <div id="flaggedArea"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const fileInput = document.getElementById('fileInput');
+const paymentsBox = document.getElementById('paymentsBox');
+const reconcileBtn = document.getElementById('reconcileBtn');
+
+fileInput.addEventListener('change', () => {
+  const file = fileInput.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => { paymentsBox.value = e.target.result; };
+  reader.readAsText(file);
+});
+
+function parseRoster(){
+  return document.getElementById('roster').value
+    .split('\n')
+    .map(s => s.trim())
+    .filter(Boolean);
+}
+
+function parsePayments(raw){
+  const lines = raw.split('\n');
+  const entries = [];
+  const errors = [];
+  lines.forEach((line, idx) => {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) return;
+    const parts = trimmed.split(',').map(p => p.trim());
+    if (parts.length < 4){
+      errors.push({ line: idx + 1, raw: trimmed, reason: 'Could not read this line — expected Date, Name, Amount, TxnID' });
+      return;
+    }
+    const [date, name, amountStr, txnid] = parts;
+    const amount = parseFloat(amountStr.replace(/[^\d.-]/g, ''));
+    entries.push({ date, name, amount, amountStr, txnid, lineNo: idx + 1 });
+  });
+  return { entries, errors };
+}
+
+function reconcile(){
+  const roster = parseRoster();
+  const rosterSet = new Set(roster.map(n => n.toLowerCase()));
+  const fee = parseFloat(document.getElementById('fee').value) || 0;
+  const { entries, errors } = parsePayments(paymentsBox.value);
+
+  const seenTxn = new Map(); // txnid -> first entry index
+  const flagged = [];
+  const valid = [];
+
+  entries.forEach((e, i) => {
+    const reasons = [];
+
+    if (isNaN(e.amount)){
+      reasons.push(`Amount "${e.amountStr}" isn't a valid number`);
+    } else {
+      if (e.amount <= 0) reasons.push(`Non-positive amount (${e.amount}) — looks like a refund/error entry, not a real payment`);
+      if (fee > 0 && e.amount > fee * 2) reasons.push(`Amount is more than double the required fee — check for a typo (extra zero?)`);
+    }
+
+    if (e.txnid){
+      if (seenTxn.has(e.txnid)){
+        reasons.push(`Transaction ID "${e.txnid}" was already used on line ${seenTxn.get(e.txnid)} — possible duplicate/double-entry`);
+      } else {
+        seenTxn.set(e.txnid, e.lineNo);
+      }
+    }
+
+    if (e.name && !rosterSet.has(e.name.toLowerCase())){
+      reasons.push(`"${e.name}" doesn't match anyone on the roster — check for a typo or an unauthorized entry`);
+    }
+
+    if (reasons.length){
+      flagged.push({ ...e, reasons });
+    } else {
+      valid.push(e);
+    }
+  });
+
+  // Aggregate valid payments per roster member
+  const totals = {};
+  roster.forEach(name => { totals[name] = 0; });
+  valid.forEach(e => {
+    const match = roster.find(n => n.toLowerCase() === e.name.toLowerCase());
+    if (match) totals[match] += e.amount;
+  });
+
+  const memberRows = roster.map(name => {
+    const paid = totals[name];
+    let status, tagClass, balanceLabel;
+    if (paid === 0){
+      status = 'Not paid'; tagClass = 'notpaid'; balanceLabel = `Owes Rs. ${fee.toLocaleString()}`;
+    } else if (paid < fee){
+      status = 'Pending'; tagClass = 'pending'; balanceLabel = `Owes Rs. ${(fee - paid).toLocaleString()}`;
+    } else if (paid === fee){
+      status = 'Settled'; tagClass = 'settled'; balanceLabel = 'Fully paid';
+    } else {
+      status = 'Overpaid'; tagClass = 'over'; balanceLabel = `+Rs. ${(paid - fee).toLocaleString()} extra`;
+    }
+    return { name, paid, status, tagClass, balanceLabel };
+  });
+
+  const totalExpected = roster.length * fee;
+  const totalCollected = valid.reduce((s, e) => s + e.amount, 0);
+  const flaggedAmount = flagged.reduce((s, e) => s + (isNaN(e.amount) ? 0 : e.amount), 0);
+  const shortfall = totalExpected - totalCollected;
+  const notPaidCount = memberRows.filter(m => m.status === 'Not paid').length;
+
+  renderResults({ memberRows, flagged, errors, totalExpected, totalCollected, flaggedAmount, shortfall, notPaidCount, fee, rosterLength: roster.length });
+}
+
+function renderResults(d){
+  document.getElementById('results').style.display = 'block';
+
+  document.getElementById('summaryStats').innerHTML = `
+    <div class="stat">
+      <div class="n">Rs. ${d.totalExpected.toLocaleString()}</div>
+      <div class="l">Expected (${d.rosterLength} × Rs. ${d.fee.toLocaleString()})</div>
+    </div>
+    <div class="stat collected">
+      <div class="n">Rs. ${d.totalCollected.toLocaleString()}</div>
+      <div class="l">Collected (verified entries)</div>
+    </div>
+    <div class="stat shortfall">
+      <div class="n">Rs. ${d.shortfall.toLocaleString()}</div>
+      <div class="l">Shortfall vs. expected</div>
+    </div>
+    <div class="stat">
+      <div class="n">${d.notPaidCount}</div>
+      <div class="l">Members with zero payment</div>
+    </div>
+  `;
+
+  document.getElementById('memberList').innerHTML = d.memberRows.map(m => `
+    <div class="stub">
+      <div class="name">${m.name}</div>
+      <div class="amt">Rs. ${m.paid.toLocaleString()}</div>
+      <div><span class="tag ${m.tagClass}">${m.status}</span></div>
+      <div class="mono">${m.balanceLabel}</div>
+    </div>
+  `).join('');
+
+  const flagArea = document.getElementById('flaggedArea');
+  if (d.flagged.length === 0 && d.errors.length === 0){
+    flagArea.innerHTML = `<div class="empty-note">No suspicious or unreadable entries found.</div>`;
+  } else {
+    let rows = '';
+    d.flagged.forEach(f => {
+      rows += `<tr>
+        <td class="mono">${f.date || '—'}</td>
+        <td>${f.name || '—'}</td>
+        <td class="mono">${isNaN(f.amount) ? f.amountStr : 'Rs. ' + f.amount.toLocaleString()}</td>
+        <td class="mono">${f.txnid || '—'}</td>
+        <td class="flag-reason">${f.reasons.join('; ')}</td>
+      </tr>`;
+    });
+    d.errors.forEach(er => {
+      rows += `<tr>
+        <td class="mono">line ${er.line}</td>
+        <td colspan="3">${er.raw}</td>
+        <td class="flag-reason">${er.reason}</td>
+      </tr>`;
+    });
+    flagArea.innerHTML = `
+      <div style="font-size:12px; color: var(--ink-dim); margin-bottom:10px;">
+        Rs. ${d.flaggedAmount.toLocaleString()} in flagged entries were kept out of the totals above until you review them.
+      </div>
+      <table>
+        <thead><tr><th>Date</th><th>Name</th><th>Amount</th><th>TxnID</th><th>Why it's flagged</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+  }
+}
+
+reconcileBtn.addEventListener('click', reconcile);
+</script>
+</body>
+</html>

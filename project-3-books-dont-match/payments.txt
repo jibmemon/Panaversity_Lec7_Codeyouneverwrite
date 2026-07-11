@@ -1,0 +1,24 @@
+# Tour Payment Log — entered as received, not sorted
+# Format: Date, Name, Amount (Rs.), TxnID
+2026-06-09, Kamran Yousuf, 55000, TXN2212
+2026-06-04, Fatima Noor, 55000, TXN2207
+2026-06-17, Tariq Jameel Khan, 55000, TXN2219
+2026-06-05, Sara Khan, 30000, TXN2205
+2026-06-15, Mehwish Baig, -5000, TXN2218
+2026-06-11, Omar Siddiqui, 10000, TXN2213
+2026-06-02, Ahmed Raza, 55000, TXN2201
+2026-06-23, Junaid Akhtar, 550000, TXN2221
+2026-06-06, Ayesha Malik, 60000, TXN2208
+2026-06-18, Bilal Sheikh, 15000, TXN2204
+2026-06-13, Omar Siddiqui, 15000, TXN2214
+2026-06-22, Kamran Yousuf, 55000, TXN2212
+2026-06-03, Bilal Sheikh, 20000, TXN2202
+2026-06-07, Hassan Iqbal, 25000, TXN2209
+2026-06-12, Mehwish Baig, 55000, TXN2217
+2026-06-16, Omar Siddiqui, 10000, TXN2215
+2026-06-20, Sara Khan, 20000, TXN2206
+2026-06-21, Rabia Sultana, 55000, TXN2220
+2026-06-08, Zainab Aslam, 10000, TXN2211
+2026-06-10, Bilal Sheikh, 20000, TXN2203
+2026-06-14, Hassan Iqbal, 30000, TXN2210
+2026-06-19, Omar Siddiqui, 20000, TXN2216
